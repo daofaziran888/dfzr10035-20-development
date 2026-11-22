@@ -24,6 +24,9 @@ from app.services.incr_tracker import IncrTrackerService
 from app.services.sample_check import SampleCheckService
 from app.services.cost_account import CostAccountService
 from app.services.task_schedule import TaskScheduleService
+from app.services.delivery_receipt import DeliveryReceiptService
+from app.services.delivery_gap import DeliveryGapService
+from app.services.redelivery_task import RedeliveryTaskService
 
 SERVICES: dict[str, BaseModuleService] = {
     "api_provider": ApiProviderService(),
@@ -48,6 +51,9 @@ SERVICES: dict[str, BaseModuleService] = {
     "sample_check": SampleCheckService(),
     "cost_account": CostAccountService(),
     "task_schedule": TaskScheduleService(),
+    "delivery_receipt": DeliveryReceiptService(),
+    "delivery_gap": DeliveryGapService(),
+    "redelivery_task": RedeliveryTaskService(),
 }
 
 

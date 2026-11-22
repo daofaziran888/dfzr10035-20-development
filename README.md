@@ -72,6 +72,28 @@ npm run dev
 | 抽样校验 | `sample_check` | 抽样计划 | 计划编号、目标端点、抽样比例 |
 | 用量计费 | `cost_account` | 用量账单 | 账单编号、提供方、计费周期 |
 | 任务调度 | `task_schedule` | 调度计划 | 计划编号、关联端点、Cron表达式 |
+| 投递回执 | `delivery_receipt` | 投递回执 | 回执编号、接收批次、数据段、起始行、结束行 |
+| 投递缺口定位 | `delivery_gap` | 投递缺口 | 缺口编号、接收批次、数据段、缺失行范围、候选快照切片 |
+| 补投任务 | `redelivery_task` | 补投任务 | 任务编号、关联缺口、计划行范围、已补投行范围、重试次数 |
+
+## 投递缺口定位专题（采集快照 × 投递回执 → 补投闭环）
+
+`/api/gap/*` 下的固定路径把采集快照检索、回执确认、缺口定位与补投任务串成闭环，
+领域逻辑分别落在 `data_version`、`delivery_receipt`、`delivery_gap`、`redelivery_task` 四个服务：
+
+| 接口 | 作用 |
+| --- | --- |
+| `GET /api/gap/snapshots` | 快照检索清单：按批次/来源/标签查询，含每条快照的已确认行范围与未交付行数 |
+| `GET /api/gap/snapshots/candidates` | 按时间范围检索可补投候选版本（补投中断后重试入口） |
+| `POST /api/gap/snapshots` | 登记采集快照（含迟到的正式版本），标签相同的快照凭原始行范围区分 |
+| `POST /api/gap/receipts/{id}/confirm` | 回执确认，结果同步到快照检索清单 |
+| `POST /api/gap/locate` | 按接收批次关联快照与回执，产出缺口定位结果（批次+数据段唯一，已确认段冻结） |
+| `POST /api/gap/gaps/{id}/redelivery` | 数据投递按缺口定位结果创建补投请求 |
+| `POST /api/gap/redelivery/{id}/interrupt` | 补投中断，按实际完成行切割并生成部分回执 |
+| `POST /api/gap/redelivery/{id}/retry` | 按时间范围重新检索候选版本后重试 |
+| `GET /api/gap/redelivery/{id}/reconstruct` | 按版本及行范围复原任务实际补了哪些记录，串联回执清单 |
+
+端到端验证脚本：`e2e/gap_delivery_e2e.py`（标准库实现，`python -I` 运行）。
 
 ## 约定
 
